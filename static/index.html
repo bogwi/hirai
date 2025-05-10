@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Hirai File Change Monitor</title>
+<style>
+body { font-family: monospace; background-color: #f0f0f0; color: #333; margin: 20px; display: flex; flex-direction: column; align-items: center; }
+#container { width: 80%; max-width: 1000px; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+h1 { color: #4CAF50; text-align: center; }
+#log-container { border: 1px solid #ccc; background-color: #282c34; color: #abb2bf; padding: 15px; height: 70vh; overflow-y: auto; white-space: pre-wrap; font-size: 0.9em; border-radius: 4px; margin-top: 15px; }
+.event { margin-bottom: 8px; padding: 5px; border-radius: 3px; }
+.op-CREATE { color: #98c379; /* green */ }
+.op-WRITE { color: #61afef; /* blue */ }
+.op-REMOVE { color: #e06c75; /* red */ }
+.op-RENAME { color: #d19a66; /* orange */ }
+.timestamp { color: #c678dd; /* magenta */ margin-right: 10px; }
+.path { color: #e5c07b; /* yellow */ }
+.status { margin-bottom: 10px; text-align: center; font-style: italic; color: #555; }
+</style>
+</head>
+<body>
+<div id="container">
+    <h1>Hirai - Real-time File Change Monitor</h1>
+    <div id="status">Connecting to WebSocket server...</div>
+    <div id="log-container"></div>
+</div>
+<script>
+const logContainer = document.getElementById("log-container");
+const statusDiv = document.getElementById("status");
+let conn;
+let retryInterval = 5000; // 5 seconds
+
+function appendLog(message, type) {
+    const eventDiv = document.createElement("div");
+    if (type === 'event') {
+        const timestamp = new Date().toLocaleTimeString();
+        const opClass = "op-" + message.op;
+        eventDiv.innerHTML = `<span class="timestamp">[${timestamp}]</span> <span class="${opClass}">${message.op}:</span> <span class="path">${message.path}</span>`;
+        eventDiv.className = "event";
+    } else {
+        eventDiv.textContent = message;
+        if (type === 'error') eventDiv.style.color = '#e06c75';
+        if (type === 'info') eventDiv.style.color = '#61afef';
+    }
+    logContainer.appendChild(eventDiv);
+    logContainer.scrollTop = logContainer.scrollHeight; // Auto-scroll to bottom
+}
+
+function connect() {
+    const wsProto = window.location.protocol === "https:" ? "wss://" : "ws://";
+    const wsHost = window.location.host;
+    conn = new WebSocket(wsProto + wsHost + "/ws");
+
+    statusDiv.textContent = `Attempting to connect to ${wsProto}${wsHost}/ws ...`;
+    appendLog("Connecting...", 'info');
+
+    conn.onopen = function(evt) {
+        statusDiv.textContent = "Connected to WebSocket server.";
+        appendLog("Connection established.", 'info');
+        retryInterval = 5000; // Reset retry interval on successful connection
+    };
+
+    conn.onclose = function(evt) {
+        statusDiv.textContent = `WebSocket connection closed. Retrying in ${retryInterval / 1000}s...`;
+        appendLog(`Connection closed. Code: ${evt.code}, Reason: ${evt.reason || 'N/A'}. Retrying...`, 'error');
+        setTimeout(connect, retryInterval);
+        retryInterval = Math.min(retryInterval * 2, 30000); // Exponential backoff up to 30s
+    };
+
+    conn.onerror = function(err) {
+        statusDiv.textContent = "WebSocket connection error.";
+        appendLog("Connection error. Check console for details.", 'error');
+        console.error('WebSocket Error:', err);
+        // onclose will typically follow, triggering the retry
+    };
+
+    conn.onmessage = function(evt) {
+        try {
+            const eventData = JSON.parse(evt.data);
+            if (eventData.path && eventData.op) {
+                appendLog(eventData, 'event');
+            } else {
+                appendLog(`Received non-event message: ${evt.data}`, 'info');
+            }
+        } catch (e) {
+            console.error("Failed to parse message:", e, "Raw data:", evt.data);
+            appendLog(`Received invalid JSON: ${evt.data}`, 'error');
+        }
+    };
+}
+
+// Initial connection attempt
+connect();
+
+</script>
+</body>
+</html>
+

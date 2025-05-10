@@ -1,0 +1,37 @@
+[package]
+name = "hirai"
+version = "0.1.0"
+edition = "2021"
+description = "A high-performance, event-driven file watcher and broadcaster with network and web integration."
+license = "MIT OR Apache-2.0"
+documentation = "https://github.com/bogw/hirai#readme"
+homepage = "https://github.com/bogw/hirai"
+repository = "https://github.com/bogw/hirai"
+authors = ["bogwi <bogwi@rakumail.jp>"]
+readme = "README.md"
+keywords = ["file-watcher", "network", "multicast", "websocket", "tokio"]
+categories = ["filesystem", "network-programming", "web-programming"]
+rust-version = "1.70"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clap = { version = "4.5.4", features = ["derive"] }
+notify = "6.1.1"
+notify-debouncer-full = "0.3.1"
+tokio = { version = "1.37.0", features = ["full"] }
+serde = { version = "1.0.197", features = ["derive"] }
+serde_json = "1.0.115"
+figment = { version = "0.10.19", features = ["toml", "env"] }
+axum = { version = "0.7.5", features = ["ws"] } # Ensure 'ws' feature is enabled for axum
+tracing = "0.1.40"
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+anyhow = "1.0.82"
+thiserror = "1.0.58"
+futures-util = "0.3.30" # For StreamExt, SinkExt
+
+[dev-dependencies]
+tempfile = "3"
+tokio-tungstenite = "0.21"
+futures-util = "0.3"
+

@@ -96,6 +96,14 @@ pub struct AppConfig {
 
 impl AppConfig {
     /// Loads the application configuration by merging CLI, file, environment, and defaults.
+    ///
+    /// This function merges configuration sources in the following order of precedence:
+    /// 1. Defaults (lowest)
+    /// 2. Configuration file (TOML)
+    /// 3. Environment variables (prefixed with `HIRAI_`)
+    /// 4. Command-line arguments (highest)
+    ///
+    /// Returns the final `AppConfig` struct with all settings resolved.
     pub fn load() -> Result<Self, figment::Error> {
         let cli_args = CliArgs::parse();
 

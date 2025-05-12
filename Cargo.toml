@@ -1,10 +1,10 @@
 [package]
 name = "hirai"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "A high-performance, event-driven file watcher and broadcaster with network and web integration."
 license = "MIT OR Apache-2.0"
-documentation = "https://github.com/bogw/hirai#readme"
+documentation = "https://docs.rs/hirai"
 homepage = "https://github.com/bogw/hirai"
 repository = "https://github.com/bogw/hirai"
 authors = ["bogwi <bogwi@rakumail.jp>"]
